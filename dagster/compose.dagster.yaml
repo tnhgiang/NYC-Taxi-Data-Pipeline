@@ -1,0 +1,70 @@
+services:
+  pipeline:
+    build:
+      context: ../pipeline
+    image: pipeline:latest
+    container_name: pipeline
+    env_file:
+      - ../.env
+    volumes:
+      - ../pipeline:/opt/dagster/app/
+    networks:
+      - network
+
+  dagster_postgres:
+    image: postgres:15
+    container_name: dagster_postgres
+    env_file:
+      - ../.env
+    volumes:
+      - ../storage/postgresql:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    networks:
+      - network
+
+  dagster:
+    build:
+      context: .
+    image: dagster:latest
+    container_name: dagster
+
+  dagster_webserver:
+    image: dagster:latest
+    container_name: dagster_webserver
+    entrypoint:
+      - dagster-webserver
+      - -h
+      - "0.0.0.0"
+      - -p
+      - "${DAGSTER_WEBSERVER_PORT}"
+      - -w
+      - workspace.yaml
+    env_file:
+      - ../.env
+    ports:
+      - "${DAGSTER_WEBSERVER_PORT}:${DAGSTER_WEBSERVER_PORT}"
+    volumes: # Make docker client accessible so we can terminate containers from dagit
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../dagster_home:/opt/dagster/dagster_home
+    networks:
+      - network
+
+  dagster_daemon:
+    image: dagster:latest
+    container_name: dagster_daemon
+    entrypoint:
+      - dagster-daemon
+      - run
+    env_file:
+      - ../.env
+    volumes: # Make docker client accessible so we can launch containers using host docker
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../dagster_home:/opt/dagster/dagster_home
+    networks:
+      - network
+
+networks:
+  network:
+    driver: bridge
+    name: network

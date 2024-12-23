@@ -167,3 +167,11 @@ cython_debug/
 
 # ansible
 secret.yaml
+
+# external docker volume
+storage/
+
+# Dagster artifacts
+dagster_home/*
+!dagster_home/dagster.yaml
+!dagster_home/workspace.yaml
