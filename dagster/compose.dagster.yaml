@@ -68,3 +68,4 @@ networks:
   network:
     driver: bridge
     name: network
+    external: true

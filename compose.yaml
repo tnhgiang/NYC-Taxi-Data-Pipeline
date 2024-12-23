@@ -1,0 +1,49 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ds_mysql
+    volumes:
+      - ./storage/mysql:/var/lib/mysql
+    ports:
+      - "${MYSQL_PORT}:${MYSQL_PORT}"
+    env_file:
+      - .env
+    networks:
+      - network
+
+  minio:
+    hostname: minio
+    image: "minio/minio"
+    container_name: dl_minio
+    ports:
+      - "${MINIO_CONSOLE_PORT}:${MINIO_CONSOLE_PORT}"
+      - "${MINIO_API_PORT}:${MINIO_API_PORT}"
+    command: ["server", "/data", "--console-address", ":${MINIO_CONSOLE_PORT}"]
+    volumes:
+      - ./storage/minio:/data
+    env_file:
+      - .env
+    networks:
+      - network
+
+  mc:
+    image: minio/mc
+    container_name: mc
+    hostname: mc
+    env_file:
+      - .env
+    entrypoint: >
+      /bin/sh -c " until (/usr/bin/mc config host add minio
+      http://${MINIO_ENDPOINT} minio minio123) do echo '...waiting...' && sleep 1;
+      done; /usr/bin/mc mb minio/warehouse; /usr/bin/mc policy set public
+      minio/warehouse; exit 0; "
+    depends_on:
+      - minio
+    networks:
+      - network
+
+networks:
+  network:
+    driver: bridge
+    name: network
+    external: true
