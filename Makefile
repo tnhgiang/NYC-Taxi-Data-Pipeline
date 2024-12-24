@@ -11,3 +11,9 @@ up: dagster_up
 
 down: dagster_down
 	docker compose down
+
+setup_database:
+	./scripts/database/setup_mysql_and_create_schema.sh
+
+load_csv:
+	./scripts/database/load_csv_to_mysql.sh ./data/csv/yellow_tripdata_2024-01.csv
