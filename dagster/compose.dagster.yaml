@@ -28,6 +28,8 @@ services:
       context: .
     image: dagster:latest
     container_name: dagster
+    networks:
+      - network
 
   dagster_webserver:
     image: dagster:latest

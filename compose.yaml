@@ -14,7 +14,7 @@ services:
   minio:
     hostname: minio
     image: "minio/minio"
-    container_name: dl_minio
+    container_name: lake_minio
     ports:
       - "${MINIO_CONSOLE_PORT}:${MINIO_CONSOLE_PORT}"
       - "${MINIO_API_PORT}:${MINIO_API_PORT}"
@@ -34,9 +34,9 @@ services:
       - .env
     entrypoint: >
       /bin/sh -c " until (/usr/bin/mc config host add minio
-      http://${MINIO_ENDPOINT} minio minio123) do echo '...waiting...' && sleep 1;
-      done; /usr/bin/mc mb minio/warehouse; /usr/bin/mc policy set public
-      minio/warehouse; exit 0; "
+      http://${MINIO_ENDPOINT} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}) do echo '...waiting...' && sleep 1;
+      done; /usr/bin/mc mb minio/${MINIO_DATALAKE_BUCKET}; /usr/bin/mc policy set public
+      minio/${MINIO_DATALAKE_BUCKET}; exit 0; "
     depends_on:
       - minio
     networks:
