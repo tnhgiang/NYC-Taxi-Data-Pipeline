@@ -3,9 +3,8 @@ from contextlib import contextmanager
 from typing import Union
 
 import polars as pl
-from minio import Minio
-
 from dagster import InputContext, IOManager, OutputContext
+from minio import Minio
 
 from ..utils import get_current_time
 

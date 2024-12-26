@@ -1,9 +1,8 @@
 from contextlib import contextmanager
 
 import polars as pl
-from sqlalchemy import create_engine
-
 from dagster import InputContext, IOManager, OutputContext
+from sqlalchemy import create_engine
 
 
 @contextmanager

@@ -1,6 +1,7 @@
 import os
 
 from dagster import Definitions, load_assets_from_package_module
+
 from pipeline import assets  # noqa: TID252
 
 from .resources.mysql_io_manager import MySQLIOManager

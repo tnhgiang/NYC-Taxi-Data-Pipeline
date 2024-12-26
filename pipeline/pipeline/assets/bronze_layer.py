@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 import polars as pl
-
 from dagster import AssetExecutionContext, Output, asset
 
 from ..partitions import daily_partitions

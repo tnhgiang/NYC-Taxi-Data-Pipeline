@@ -1,6 +1,4 @@
 import polars as pl
-from pipeline.assets.bronze_layer import bronze_yellow_taxi_trips
-
 from dagster import (
     InMemoryIOManager,
     InputContext,
@@ -9,6 +7,8 @@ from dagster import (
     build_op_context,
     materialize,
 )
+
+from pipeline.assets.bronze_layer import bronze_yellow_taxi_trips
 
 
 class MockMySQLIOManager(IOManager):
