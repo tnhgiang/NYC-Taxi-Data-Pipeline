@@ -6,7 +6,7 @@ authors = ["tnhgiang <giang.tnhoang@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11, <3.13"
 tqdm = "^4.67.1"
 polars = "^1.17.1"
 
@@ -16,6 +16,9 @@ black = "^24.10.0"
 flake8 = "^7.1.1"
 isort = "^5.13.2"
 pre-commit = "^4.0.1"
+dagster = "^1.9.6"
+minio = "^7.2.13"
+pytest = "^8.3.4"
 
 [tool.black]
 line-length = 88
@@ -23,6 +26,9 @@ line-length = 88
 [tool.isort]
 profile = "black"
 src_paths = ["pipeline"]
+
+[tool.pytest.ini_options]
+testpaths = ["pipeline/pipeline_test"]
 
 [build-system]
 requires = ["poetry-core"]
