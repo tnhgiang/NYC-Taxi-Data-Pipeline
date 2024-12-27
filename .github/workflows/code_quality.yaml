@@ -3,11 +3,9 @@ name: Code Quality Checks
 on:
   pull_request:
     branches: [main, develop, staging]
-  push:
-    branches: ci
 
 jobs:
-  build:
+  code-quality:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
