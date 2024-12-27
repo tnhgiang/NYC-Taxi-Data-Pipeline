@@ -17,3 +17,6 @@ setup_database:
 
 load_csv:
 	./scripts/database/load_csv_to_mysql.sh ./data/csv/yellow_tripdata_2024-01.csv
+
+test:
+	pytest
