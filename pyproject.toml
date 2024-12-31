@@ -30,6 +30,9 @@ src_paths = ["pipeline"]
 [tool.pytest.ini_options]
 testpaths = ["pipeline/pipeline_test"]
 
+[tool.codespell]
+skip = "*.svg"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
