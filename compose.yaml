@@ -1,7 +1,7 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: ds_mysql
+    container_name: ds-mysql
     volumes:
       - ./storage/mysql:/var/lib/mysql
     ports:
@@ -14,7 +14,7 @@ services:
   minio:
     hostname: minio
     image: "minio/minio"
-    container_name: lake_minio
+    container_name: lake-minio
     ports:
       - "${MINIO_CONSOLE_PORT}:${MINIO_CONSOLE_PORT}"
       - "${MINIO_API_PORT}:${MINIO_API_PORT}"

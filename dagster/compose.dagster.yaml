@@ -4,18 +4,40 @@ services:
       context: ../pipeline
     image: pipeline:latest
     container_name: pipeline
-    env_file:
-      - ../.env
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_PORT=${MYSQL_PORT}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_DATALAKE_BUCKET=${MINIO_DATALAKE_BUCKET}
+      - DAGSTER_PG_HOSTNAME=${POSTGRES_HOST}
+      - DAGSTER_PG_USERNAME=${POSTGRES_USER}
+      - DAGSTER_PG_PASSWORD=${POSTGRES_PASSWORD}
+      - DAGSTER_PG_DB=${POSTGRES_DB}
+      - DAGSTER_PG_PORT=${POSTGRES_PORT}
+      - SPARK_MASTER_URL=${SPARK_MASTER_URL}
+      - SPARK_APP_NAME=${SPARK_APP_NAME}
     volumes:
       - ../pipeline:/opt/dagster/app/
+      - ../pipeline/spark-defaults.conf:/usr/local/spark/conf/spark-defaults.conf
+    ports:
+      - "${SPARK_WEBUI_PORT}:${SPARK_WEBUI_PORT}"
     networks:
       - network
 
-  dagster_postgres:
+  dagster-postgres:
     image: postgres:15
-    container_name: dagster_postgres
-    env_file:
-      - ../.env
+    container_name: dagster-postgres
+    environment:
+      - DAGSTER_PG_HOSTNAME=${POSTGRES_HOST}
+      - DAGSTER_PG_USERNAME=${POSTGRES_USER}
+      - DAGSTER_PG_PASSWORD=${POSTGRES_PASSWORD}
+      - DAGSTER_PG_DB=${POSTGRES_DB}
+      - DAGSTER_PG_PORT=${POSTGRES_PORT}
     volumes:
       - ../storage/postgresql:/var/lib/postgresql/data
     ports:
@@ -31,9 +53,9 @@ services:
     networks:
       - network
 
-  dagster_webserver:
+  dagster-webserver:
     image: dagster:latest
-    container_name: dagster_webserver
+    container_name: dagster-webserver
     entrypoint:
       - dagster-webserver
       - -h
@@ -42,8 +64,12 @@ services:
       - "${DAGSTER_WEBSERVER_PORT}"
       - -w
       - workspace.yaml
-    env_file:
-      - ../.env
+    environment:
+      - DAGSTER_PG_HOSTNAME=${POSTGRES_HOST}
+      - DAGSTER_PG_USERNAME=${POSTGRES_USER}
+      - DAGSTER_PG_PASSWORD=${POSTGRES_PASSWORD}
+      - DAGSTER_PG_DB=${POSTGRES_DB}
+      - DAGSTER_PG_PORT=${POSTGRES_PORT}
     ports:
       - "${DAGSTER_WEBSERVER_PORT}:${DAGSTER_WEBSERVER_PORT}"
     volumes: # Make docker client accessible so we can terminate containers from dagit
@@ -52,14 +78,18 @@ services:
     networks:
       - network
 
-  dagster_daemon:
+  dagster-daemon:
     image: dagster:latest
-    container_name: dagster_daemon
+    container_name: dagster-daemon
+    environment:
+      - DAGSTER_PG_HOSTNAME=${POSTGRES_HOST}
+      - DAGSTER_PG_USERNAME=${POSTGRES_USER}
+      - DAGSTER_PG_PASSWORD=${POSTGRES_PASSWORD}
+      - DAGSTER_PG_DB=${POSTGRES_DB}
+      - DAGSTER_PG_PORT=${POSTGRES_PORT}
     entrypoint:
       - dagster-daemon
       - run
-    env_file:
-      - ../.env
     volumes: # Make docker client accessible so we can launch containers using host docker
       - /var/run/docker.sock:/var/run/docker.sock
       - ../dagster_home:/opt/dagster/dagster_home
