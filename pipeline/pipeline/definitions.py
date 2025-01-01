@@ -1,11 +1,15 @@
+# Reference: https://github.com/dagster-io/dagster/blob/master/examples/project_fully_featured/project_fully_featured/definitions.py # noqa: E501
+# Reference: https://github.com/dagster-io/dagster/blob/master/examples/with_pyspark_emr/with_pyspark_emr/definitions.py  # noqa: E501
 import os
 
 from dagster import Definitions, load_assets_from_package_module
+from dagster_pyspark import PySparkResource
 
 from pipeline import assets  # noqa: TID252
 
 from .resources.mysql_io_manager import MySQLIOManager
 from .resources.parquet_io_manager import MinIOPartitionedParquetIOManager
+from .resources.spark_io_manager import SparkPartitionedParquetIOManager
 
 ####################
 #     Assets       #
@@ -32,13 +36,24 @@ MINIO_CONFIG = {
     "bucket": os.getenv("MINIO_DATALAKE_BUCKET"),
 }
 
+SPARK_CONFIG = {
+    "spark.app.name": os.getenv("SPARK_APP_NAME"),
+    "spark.master": os.getenv("SPARK_MASTER_URL"),
+    "spark.hadoop.fs.s3a.endpoint": f"http://{os.getenv('MINIO_ENDPOINT')}",
+    "spark.hadoop.fs.s3a.access.key": os.getenv("MINIO_ROOT_USER"),
+    "spark.hadoop.fs.s3a.secret.key": os.getenv("MINIO_ROOT_PASSWORD"),
+}
+
 
 ####################
 #    Resources     #
 ####################
 RESOURCES_LOCAL = {
+    "pyspark": PySparkResource(spark_config=SPARK_CONFIG),
+
     "mysql_io_manager": MySQLIOManager(MYSQL_CONFIG),
     "parquet_io_manager": MinIOPartitionedParquetIOManager(MINIO_CONFIG),
+    "spark_io_manager": SparkPartitionedParquetIOManager(),
 }
 
 # TODO: Add resources for staging and production environments

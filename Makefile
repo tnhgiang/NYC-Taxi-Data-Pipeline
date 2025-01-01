@@ -1,15 +1,21 @@
 .PHONY: up
 
 dagster_up:
-	docker compose -f dagster/compose.dagster.yaml --env-file .env up --build -d
+	docker compose -f dagster/compose.dagster.yaml --env-file .env up -d
 
 dagster_down:
 	docker compose -f dagster/compose.dagster.yaml --env-file .env down
 
-up: dagster_up
-	docker compose up --build -d
+spark_up:
+	docker compose -f spark/compose.spark.yaml --env-file .env up -d
 
-down: dagster_down
+spark_down:
+	docker compose -f spark/compose.spark.yaml --env-file .env down
+
+up: dagster_up spark_up
+	docker compose up -d
+
+down: dagster_down spark_down
 	docker compose down
 
 setup_database:
