@@ -27,6 +27,7 @@ def bronze_yellow_taxi_trips(context: AssetExecutionContext) -> Output[pl.DataFr
             f" WHERE tpep_pickup_datetime >= '{partition_date_str}'"
             f" and tpep_pickup_datetime < '{next_date_str}'"
         )
+        context.log.info(f"Loading data for partition date: {partition_date_str}")
     else:
         context.log.info("No partition date provided. Full loading data.")
 

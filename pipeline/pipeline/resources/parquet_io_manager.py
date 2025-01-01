@@ -6,7 +6,7 @@ import polars as pl
 from dagster import InputContext, IOManager, OutputContext
 from minio import Minio
 
-from ..utils import get_current_time
+from .utils import get_current_time
 
 
 @contextmanager
@@ -26,21 +26,25 @@ def connect_minio(config):
 class MinIOPartitionedParquetIOManager(IOManager):
     def __init__(self, config):
         self._config = config
+        self._create_bucket_if_not_exits(self._config.get("bucket"))
 
-    def _create_bucket_if_not_exits(self, client, bucket_name):
-        """Create a bucket for datalake if it does not exist."""
-        try:
-            found = client.bucket_exists(bucket_name)
-            if not found:
-                client.make_bucket(bucket_name)
-        except Exception:
-            raise
+    def _create_bucket_if_not_exits(self, bucket_name):
+        """Create a bucket for lake if it does not exist."""
+        with connect_minio(self._config) as client:
+            try:
+                found = client.bucket_exists(bucket_name)
+                if not found:
+                    client.make_bucket(bucket_name)
+            except Exception:
+                raise ValueError(
+                    f"{self.__class__.__name__}: Failed to create{bucket_name} bucket"
+                )
 
     def _get_path(self, context: Union[InputContext, OutputContext]):
         """Get the path for the parquet file."""
         # Example: layer = bronze, schema=nyc_taxi, table=bronze_yellow_taxi_trips
         layer, schema, table = context.asset_key.path
-        # Example: key = datalake/bronze/nyc_taxi/yellow_taxi_trips
+        # Example: key = bronze/nyc_taxi/yellow_taxi_trips
         key = "/".join([layer, schema, table.replace(f"{layer}_", "")])
 
         tmp_file_path = "/tmp/file-{}-{}.parquet".format(
@@ -49,13 +53,18 @@ class MinIOPartitionedParquetIOManager(IOManager):
 
         if context.has_partition_key:
             partition_key = context.asset_partition_key
-            # Example: datalake/bronze/nyc_taxi/yellow_taxi_trips/20240101.pq
+            # Example: bronze/nyc_taxi/yellow_taxi_trips/20240101.pq
             return os.path.join(key, f"{partition_key}.pq"), tmp_file_path
         else:
-            # Example: datalake/bronze/nyc_taxi/yellow_taxi_trips.pq
+            # Example: bronze/nyc_taxi/yellow_taxi_trips.pq
             return f"{key}.pq", tmp_file_path
 
     def handle_output(self, context: OutputContext, obj: pl.DataFrame):
+        if not isinstance(obj, pl.DataFrame):
+            raise ValueError(
+                f"{self.__class__.__name__}: Output obj should be a Polars DataFrame, "
+                f"got {type(obj)} instead."
+            )
         # convert to parquet format
         key_name, tmp_file_path = self._get_path(context)
         obj.write_parquet(tmp_file_path, use_pyarrow=True)
@@ -64,8 +73,10 @@ class MinIOPartitionedParquetIOManager(IOManager):
         try:
             bucket_name = self._config.get("bucket")
             with connect_minio(self._config) as client:
-                self._create_bucket_if_not_exits(client, bucket_name)
                 client.fput_object(bucket_name, key_name, tmp_file_path)
+                context.log.debug(
+                    f"{self.__class__.__name__}: {key_name} saved successfully"
+                )
 
             row_count = len(obj)
             context.add_output_metadata(
@@ -83,10 +94,17 @@ class MinIOPartitionedParquetIOManager(IOManager):
         # download from MinIO
         try:
             with connect_minio(self._config) as client:
-                self._create_bucket_if_not_exits(client, bucket_name)
                 client.fget_object(bucket_name, key_name, tmp_file_path)
+                context.log.debug(
+                    f"{self.__class__.__name__}: {key_name} loaded successfully"
+                )
 
             pl_data = pl.read_parquet(tmp_file_path, use_pyarrow=True)
+            if not isinstance(pl_data, pl.DataFrame):
+                raise ValueError(
+                    f"{self.__class__.__name__}: Output obj should be a "
+                    f"Polars DataFrame, got {type(pl_data)} instead."
+                )
 
             return pl_data
         except Exception:
