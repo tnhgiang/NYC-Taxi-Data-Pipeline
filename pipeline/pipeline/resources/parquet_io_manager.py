@@ -6,7 +6,7 @@ import polars as pl
 from dagster import InputContext, IOManager, OutputContext
 from minio import Minio
 
-from .utils import get_current_time
+from ..utils import get_current_time, get_size_in_MB
 
 
 @contextmanager
@@ -78,9 +78,12 @@ class MinIOPartitionedParquetIOManager(IOManager):
                     f"{self.__class__.__name__}: {key_name} saved successfully"
                 )
 
-            row_count = len(obj)
             context.add_output_metadata(
-                {"path": key_name, "records": row_count, "tmp": tmp_file_path}
+                {
+                    "path": key_name,
+                    "tmp": tmp_file_path,
+                    "size_on_disk_in_MB": get_size_in_MB(tmp_file_path),
+                }
             )
 
             # clean up tmp file

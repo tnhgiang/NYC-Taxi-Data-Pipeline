@@ -33,4 +33,11 @@ def bronze_yellow_taxi_trips(context: AssetExecutionContext) -> Output[pl.DataFr
 
     pl_data = context.resources.mysql_io_manager.extract_data(sql_stm)
 
-    return Output(pl_data)
+    return Output(
+        pl_data,
+        metadata={
+            "table": "yellow_taxi_trips",
+            "row_count": len(pl_data),
+            "column_names": pl_data.columns,
+        },
+    )

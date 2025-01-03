@@ -36,6 +36,8 @@ class SparkPartitionedParquetIOManager(IOManager):
             context.log.debug(
                 f"{self.__class__.__name__}: {key_name} saved successfully"
             )
+
+            context.add_output_metadata({"path": key_name})
         except Exception:
             raise
 
