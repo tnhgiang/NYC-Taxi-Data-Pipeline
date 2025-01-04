@@ -19,7 +19,6 @@ from .resources.minio_io_manager import (
 from .resources.mysql_io_manager import MySQLIOManager
 from .resources.spark_io_manager import SparkPartitionedParquetIOManager
 
-deployment_env = os.getenv("ENV", "LOCAL")
 ####################
 #     Assets       #
 ####################
@@ -43,7 +42,9 @@ MINIO_CONFIG = {
     "access_key": os.getenv("MINIO_ROOT_USER"),
     "secret_key": os.getenv("MINIO_ROOT_PASSWORD"),
     "bucket": os.getenv("MINIO_DATALAKE_BUCKET"),
-    "create_bucket_if_not_exists": False if deployment_env == "CI" else True,
+    "create_bucket_if_not_exists": (
+        False if not os.getenv("ENV") else True
+    ),
 }
 
 SPARK_CONFIG = {
@@ -78,6 +79,7 @@ resources_by_deployment_env = {
     "STAGING": RESOURCES_STAGING,
     "PROD": RESOURCES_PROD,
 }
+deployment_env = os.getenv("ENV", "LOCAL")
 
 ####################
 #   Definitions    #
