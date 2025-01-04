@@ -7,8 +7,16 @@ from dagster_pyspark import PySparkResource
 
 from pipeline import assets  # noqa: TID252
 
+from .resources.file_downloader_resource import (
+    CSVDownloaderResource,
+    ZipFileDownloaderResource,
+)
+from .resources.minio_io_manager import (
+    MinIOCSVIOManager,
+    MinIOPartitionedParquetIOManager,
+    MinIOZippedShapefileIOManager,
+)
 from .resources.mysql_io_manager import MySQLIOManager
-from .resources.parquet_io_manager import MinIOPartitionedParquetIOManager
 from .resources.spark_io_manager import SparkPartitionedParquetIOManager
 
 ####################
@@ -44,14 +52,16 @@ SPARK_CONFIG = {
     "spark.hadoop.fs.s3a.secret.key": os.getenv("MINIO_ROOT_PASSWORD"),
 }
 
-
 ####################
 #    Resources     #
 ####################
 RESOURCES_LOCAL = {
     "pyspark": PySparkResource(spark_config=SPARK_CONFIG),
-
+    "csv_downloader": CSVDownloaderResource(),
+    "zipfile_downloader": ZipFileDownloaderResource(),
     "mysql_io_manager": MySQLIOManager(MYSQL_CONFIG),
+    "csv_io_manager": MinIOCSVIOManager(MINIO_CONFIG),
+    "shapefile_io_manager": MinIOZippedShapefileIOManager(MINIO_CONFIG),
     "parquet_io_manager": MinIOPartitionedParquetIOManager(MINIO_CONFIG),
     "spark_io_manager": SparkPartitionedParquetIOManager(),
 }

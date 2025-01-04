@@ -1,5 +1,6 @@
 # Reference: https://github.com/dagster-io/dagster/blob/master/examples/with_pyspark_emr/with_pyspark_emr/definitions.py # noqa: E501
 import os
+from pathlib import Path
 
 from dagster import InputContext, IOManager, OutputContext
 from dagster_pyspark import PySparkResource
@@ -47,7 +48,11 @@ class SparkPartitionedParquetIOManager(IOManager):
 
             # Load the parquet file into a Spark DataFrame
             spark = self.pyspark.spark_session
-            spark_data = spark.read.parquet(key_name)
+            spark_data = spark.read.parquet(str(Path(key_name) / "*.parquet"))
+
+            context.log.debug(
+                f"{self.__class__.__name__}: {key_name} loaded successfully"
+            )
 
             if not isinstance(spark_data, DataFrame):
                 raise ValueError(
