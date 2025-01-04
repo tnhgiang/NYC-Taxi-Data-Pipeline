@@ -55,15 +55,16 @@ SPARK_CONFIG = {
 ####################
 #    Resources     #
 ####################
+pyspark_resource = PySparkResource(spark_config=SPARK_CONFIG)
 RESOURCES_LOCAL = {
-    "pyspark": PySparkResource(spark_config=SPARK_CONFIG),
+    "pyspark": pyspark_resource,
     "csv_downloader": CSVDownloaderResource(),
     "zipfile_downloader": ZipFileDownloaderResource(),
     "mysql_io_manager": MySQLIOManager(MYSQL_CONFIG),
     "csv_io_manager": MinIOCSVIOManager(MINIO_CONFIG),
     "shapefile_io_manager": MinIOZippedShapefileIOManager(MINIO_CONFIG),
     "parquet_io_manager": MinIOPartitionedParquetIOManager(MINIO_CONFIG),
-    "spark_io_manager": SparkPartitionedParquetIOManager(),
+    "spark_io_manager": SparkPartitionedParquetIOManager(pyspark=pyspark_resource),
 }
 
 # TODO: Add resources for staging and production environments
