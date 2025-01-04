@@ -119,7 +119,7 @@ class MinIOPartitionedParquetIOManager(MinIOIOManager):
             get_current_time(), "-".join(context.asset_key.path)
         )
 
-        if context.has_partition_key:
+        if context.has_asset_partitions:
             partition_key = context.asset_partition_key
             # Example: bronze/nyc_taxi/yellow_taxi_trips/20240101.pq
             return os.path.join(key, f"{partition_key}.pq"), tmp_file_path
