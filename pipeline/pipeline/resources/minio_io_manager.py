@@ -27,19 +27,20 @@ def connect_minio(config):
 class MinIOIOManager(IOManager):
     def __init__(self, config):
         self._config = config
-        self._create_bucket_if_not_exists(self._config.get("bucket"))
+        if self._config.get("create_bucket_if_not_exists"):
+            self._create_bucket_if_not_exists(self._config.get("bucket"))
 
     def _create_bucket_if_not_exists(self, bucket_name):
         """Create a bucket for lake if it does not exist."""
-        with connect_minio(self._config) as client:
-            try:
+        try:
+            with connect_minio(self._config) as client:
                 found = client.bucket_exists(bucket_name)
                 if not found:
                     client.make_bucket(bucket_name)
-            except Exception:
-                raise ValueError(
-                    f"{self.__class__.__name__}: Failed to create {bucket_name} bucket"
-                )
+        except Exception:
+            raise ValueError(
+                f"{self.__class__.__name__}: Failed to create {bucket_name} bucket"
+            )
 
     def _load_file(self, path):
         """Load the file to a DataFrame."""
