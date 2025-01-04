@@ -39,7 +39,7 @@ dagster = "1.9.3"
 pytest = "^8.3.4"
 minio = "7.2.12"
 dagster-pyspark = "0.25.3"
-geopandas = "1.0.1"
+polars = "1.17.1"
 
 [tool.black]
 line-length = 88
