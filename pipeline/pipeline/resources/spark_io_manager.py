@@ -19,9 +19,9 @@ class SparkPartitionedParquetIOManager(ConfigurableIOManager):
         if context.has_partition_key:
             partition_key = context.asset_partition_key
             # Example: silver/nyc_taxi/yellow_taxi_trips/20240101.pq
-            return os.path.join(key, f"{partition_key}", ".pq")
+            return os.path.join(key, f"{partition_key}")
         else:
-            return f"{key}.pq"
+            return f"{key}"
 
     def handle_output(self, context: OutputContext, obj: DataFrame):
         try:
