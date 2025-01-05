@@ -1,0 +1,8 @@
+<!-- https://github.com/ClickHouse/ClickHouse/blob/master/docker/server/docker_related_config.xml -->
+<clickhouse>
+    <!-- <http_port replace="1" from_env="CLICKHOUSE_HTTP_PORT">8123</http_port> -->
+
+    <!-- Error when trying to alter the default tct_port
+    TODO: Change the tcp_port  -->
+    <!-- <tcp_port replace="1" from_env="CLICKHOUSE_TCP_PORT">9000</tcp_port> -->
+</clickhouse>
