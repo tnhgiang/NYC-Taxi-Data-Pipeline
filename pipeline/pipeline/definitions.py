@@ -5,8 +5,9 @@ import os
 from dagster import Definitions, load_assets_from_package_module
 from dagster_pyspark import PySparkResource
 
-from pipeline import assets  # noqa: TID252
+from pipeline import assets
 
+from .resources.clickhouse_io_manager import ClickHouseIOManager
 from .resources.file_downloader_resource import (
     CSVDownloaderResource,
     ZipFileDownloaderResource,
@@ -42,9 +43,7 @@ MINIO_CONFIG = {
     "access_key": os.getenv("MINIO_ROOT_USER"),
     "secret_key": os.getenv("MINIO_ROOT_PASSWORD"),
     "bucket": os.getenv("MINIO_DATALAKE_BUCKET"),
-    "create_bucket_if_not_exists": (
-        False if not os.getenv("ENV") else True
-    ),
+    "create_bucket_if_not_exists": (False if not os.getenv("ENV") else True),
 }
 
 SPARK_CONFIG = {
@@ -53,6 +52,19 @@ SPARK_CONFIG = {
     "spark.hadoop.fs.s3a.endpoint": f"http://{os.getenv('MINIO_ENDPOINT')}",
     "spark.hadoop.fs.s3a.access.key": os.getenv("MINIO_ROOT_USER"),
     "spark.hadoop.fs.s3a.secret.key": os.getenv("MINIO_ROOT_PASSWORD"),
+    "spark.sql.catalog.clickhouse.host": os.getenv("CLICKHOUSE_HOST"),
+    "spark.sql.catalog.clickhouse.http_port": os.getenv("CLICKHOUSE_HTTP_PORT"),
+    "spark.sql.catalog.clickhouse.user": os.getenv("CLICKHOUSE_USER"),
+    "spark.sql.catalog.clickhouse.password": os.getenv("CLICKHOUSE_PASSWORD"),
+    "spark.sql.catalog.clickhouse.database": os.getenv("CLICKHOUSE_DB"),
+}
+
+CLICKHOUSE_CONFIG = {
+    "host": os.getenv("CLICKHOUSE_HOST"),
+    "port": os.getenv("CLICKHOUSE_TCP_PORT"),
+    "user": os.getenv("CLICKHOUSE_USER"),
+    "password": os.getenv("CLICKHOUSE_PASSWORD"),
+    "database": os.getenv("CLICKHOUSE_DB"),
 }
 
 ####################
@@ -68,6 +80,7 @@ RESOURCES_LOCAL = {
     "shapefile_io_manager": MinIOZippedShapefileIOManager(MINIO_CONFIG),
     "parquet_io_manager": MinIOPartitionedParquetIOManager(MINIO_CONFIG),
     "spark_io_manager": SparkPartitionedParquetIOManager(pyspark=pyspark_resource),
+    "clickhouse_io_manager": ClickHouseIOManager(CLICKHOUSE_CONFIG),
 }
 
 # TODO: Add resources for staging and production environments
