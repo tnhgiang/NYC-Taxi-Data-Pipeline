@@ -5,4 +5,5 @@
     <!-- Error when trying to alter the default tct_port
     TODO: Change the tcp_port  -->
     <!-- <tcp_port replace="1" from_env="CLICKHOUSE_TCP_PORT">9000</tcp_port> -->
+    <timezone>Asia/Ho_Chi_Minh</timezone>
 </clickhouse>

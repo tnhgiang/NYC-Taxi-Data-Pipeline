@@ -43,7 +43,7 @@ services:
       - network
 
   clickhouse:
-    image: clickhouse/clickhouse-server:24.8
+    image: clickhouse/clickhouse-server:24.9
     container_name: dw-clickhouse
     environment:
       CLICKHOUSE_DB: ${CLICKHOUSE_DB}
@@ -53,13 +53,16 @@ services:
       CLICKHOUSE_TCP_PORT: ${CLICKHOUSE_TCP_PORT}
       CLICKHOUSE_HTTP_PORT: ${CLICKHOUSE_HTTP_PORT}
     ports:
-      - ${CLICKHOUSE_TCP_PORT}:9000 # Error when trying to dynamically set container tcp_port
       - ${CLICKHOUSE_HTTP_PORT}:${CLICKHOUSE_HTTP_PORT} # For Clickhouse Web UI
+    expose:
+      - ${CLICKHOUSE_TCP_PORT}
     volumes:
       - ./storage/clickhouse:/var/lib/clickhouse
       - ./storage/clickhouse-logs:/var/log/clickhouse-server/
       - ./clickhouse/config.d/config.xml:/etc/clickhouse-server/config.d/config.xml
       - ./clickhouse/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    networks:
+      - network
 
 networks:
   network:
