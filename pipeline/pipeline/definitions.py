@@ -3,10 +3,12 @@
 import os
 
 from dagster import Definitions, load_assets_from_package_module
+from dagster_dbt import DbtCliResource
 from dagster_pyspark import PySparkResource
 
 from pipeline import assets
 
+from .dbt import dbt_project
 from .resources.clickhouse_io_manager import ClickHouseIOManager
 from .resources.file_downloader_resource import (
     CSVDownloaderResource,
@@ -24,6 +26,17 @@ from .resources.spark_io_manager import SparkPartitionedParquetIOManager
 #     Assets       #
 ####################
 pipeline_assets = load_assets_from_package_module(assets)
+
+# dbt
+# DBT_PROJECT_DIR = file_relative_path(__file__, "../dbt_nyc")
+# DBT_PROFILES_DIR = file_relative_path(__file__, "../dbt_nyc")
+# dbt_asset = load_assets_from_dbt_project(
+#     profiles_dir=DBT_PROFILES_DIR,
+#     project_dir=DBT_PROJECT_DIR,
+#     key_prefix=["warehouse", "nyc_taxi"],
+# )
+
+# Combine all assets
 all_assets = [*pipeline_assets]
 
 
@@ -80,8 +93,10 @@ RESOURCES_LOCAL = {
     "shapefile_io_manager": MinIOZippedShapefileIOManager(MINIO_CONFIG),
     "parquet_io_manager": MinIOPartitionedParquetIOManager(MINIO_CONFIG),
     "spark_io_manager": SparkPartitionedParquetIOManager(pyspark=pyspark_resource),
-    "clickhouse_io_manager": ClickHouseIOManager(CLICKHOUSE_CONFIG),
+    "warehouse_io_manager": ClickHouseIOManager(CLICKHOUSE_CONFIG),
+    "dbt": DbtCliResource(project_dir=dbt_project, target="local"),
 }
+
 
 # TODO: Add resources for staging and production environments
 RESOURCES_STAGING = {}

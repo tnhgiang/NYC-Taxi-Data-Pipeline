@@ -26,3 +26,6 @@ load_csv:
 
 test:
 	pytest
+
+dbt_compile:
+	docker exec pipeline bash -c "cd dbt_nyc && dbt compile"

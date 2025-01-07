@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: nyc_taxi
+    tables:
+      - name: dim_locations
+        meta:
+          dagster:
+            asset_key: ["dim_locations"]
+            key_prefix: ["gold", "nyc_taxi"]
+      - name: fact_trips
+        meta:
+          dagster:
+            asset_key: ["fact_trips"]
+            key_prefix: ["gold", "nyc_taxi"]
