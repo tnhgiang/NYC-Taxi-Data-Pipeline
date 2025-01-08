@@ -2,7 +2,6 @@ from contextlib import contextmanager
 from typing import Any, Union
 
 import polars as pl
-from clickhouse_driver import Client
 from dagster import InputContext, IOManager, OutputContext
 from pyspark.sql import DataFrame
 
@@ -11,6 +10,8 @@ from ..utils import get_current_time
 
 @contextmanager
 def connect_clickhouse(config):
+    from clickhouse_driver import Client
+
     client = Client.from_url(
         f"clickhouse://{config.get('user')}:{config.get('password')}@"
         f"{config.get('host')}:{config.get('port')}/{config.get('database')}"
