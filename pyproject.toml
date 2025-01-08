@@ -45,6 +45,7 @@ minio = "7.2.12"
 dagster-pyspark = "0.25.3"
 polars = "1.17.1"
 geopandas = "1.0.1"
+dagster-dbt = "0.25.3"
 
 [tool.black]
 line-length = 88
