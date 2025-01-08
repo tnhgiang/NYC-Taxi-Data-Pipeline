@@ -58,7 +58,7 @@ src_paths = ["pipeline"]
 testpaths = ["pipeline/pipeline_test"]
 
 [tool.codespell]
-skip = "*.svg"
+skip = "*.svg,*.json"
 
 [build-system]
 requires = ["poetry-core"]
