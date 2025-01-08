@@ -112,8 +112,8 @@ def silver_cleaned_yellow_taxi_trips(
     df = df.withColumn(
         "payment_type",
         when(
-            (df["payment_type"] >= const.PAYMENT_TYPE_MIN_VALUE)
-            & (df["payment_type"] <= const.PAYMENT_TYPE_MAX_VALUE),
+            (df["payment_type"] < const.PAYMENT_TYPE_MIN_VALUE)
+            | (df["payment_type"] > const.PAYMENT_TYPE_MAX_VALUE),
             const.UNKNOWN_PAYMENT_TYPE_VALUE,
         ).otherwise(df["payment_type"]),
     )
@@ -249,7 +249,7 @@ def silver_cleaned_taxi_zone_geometry(
     df["latitude"] = df.geometry.centroid.y
 
     # Convert GeoDataFrame to Polars DataFrame
-    df = pl.from_pandas(df.drop(columns=["geometry", "Shape_Leng", "Shape_Area"]))
+    df = pl.from_pandas(df.drop(columns=["geometry", "OBJECTID"]))
 
     # Deduplication
     df = df.unique()
@@ -262,16 +262,22 @@ def silver_cleaned_taxi_zone_geometry(
     # Data type corrections
     df = df.cast(
         {
-            "OBJECTID": pl.UInt32,
+            "LocationID": pl.UInt32,
             "longitude": pl.Float32,
             "latitude": pl.Float32,
+            "Shape_Leng": pl.Float32,
+            "Shape_Area": pl.Float32,
+            "zone": pl.String,
+            "borough": pl.String,
         }
     )
 
     # Rename columns
     df = df.rename(
         {
-            "OBJECTID": "location_id",
+            "LocationID": "location_id",
+            "Shape_Leng": "shape_length",
+            "Shape_Area": "shape_area",
         }
     )
 

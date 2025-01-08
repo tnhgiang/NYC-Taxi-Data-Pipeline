@@ -21,6 +21,12 @@ services:
       - DAGSTER_PG_PORT=${POSTGRES_PORT}
       - SPARK_MASTER_URL=${SPARK_MASTER_URL}
       - SPARK_APP_NAME=${SPARK_APP_NAME}
+      - CLICKHOUSE_HOST=${CLICKHOUSE_HOST}
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+      - CLICKHOUSE_DB=${CLICKHOUSE_DB}
+      - CLICKHOUSE_TCP_PORT=${CLICKHOUSE_TCP_PORT}
+      - CLICKHOUSE_HTTP_PORT=${CLICKHOUSE_HTTP_PORT}
     volumes:
       - ../pipeline:/opt/dagster/app/
       - ../pipeline/spark-defaults.conf:/usr/local/spark/conf/spark-defaults.conf

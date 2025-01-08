@@ -25,7 +25,7 @@ def dim_locations(
     Create the Location Dimension Table.
     """
     df = silver_cleaned_taxi_zone.join(
-        silver_cleaned_taxi_zone_geometry, on="location_id"
+        silver_cleaned_taxi_zone_geometry, on=["location_id", "borough", "zone"]
     )
 
     return Output(df, metadata={"row_count": df.height, "column_names": df.columns})

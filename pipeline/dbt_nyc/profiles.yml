@@ -1,0 +1,11 @@
+clickhouse_nyc_taxi:
+  target: local
+  outputs:
+    local:
+      type: clickhouse
+      schema: "{{ env_var('CLICKHOUSE_DB') }}"
+      host: "{{ env_var('CLICKHOUSE_HOST') }}"
+      port: "{{ env_var('CLICKHOUSE_HTTP_PORT') | as_number }}"
+      user: "{{ env_var('CLICKHOUSE_USER') }}"
+      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      secure: False

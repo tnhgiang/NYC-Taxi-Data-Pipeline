@@ -5,10 +5,14 @@ import polars as pl
 import pytz
 
 
-def get_current_time() -> str:
+def get_current_time(only_time=False) -> str:
     """Get current time in Vietnam timezone."""
     vietname_tz = pytz.timezone("Asia/Ho_Chi_Minh")
-    return datetime.now(vietname_tz).strftime("%Y-%m-%d_%H:%M:%S:%f")
+    dt = datetime.now(vietname_tz)
+
+    if only_time:
+        return dt.strftime("%H_%M_%S_%f")
+    return dt.strftime("%Y-%m-%d_%H:%M:%S:%f")
 
 
 def get_size_in_MB(path: str) -> float:
