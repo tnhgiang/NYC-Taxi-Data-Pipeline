@@ -1,22 +1,25 @@
-.PHONY: up
+.PHONY: pipeline_up pipeline_down up down setup_database load_csv test dbt_compile
 
-dagster_up:
-	docker compose -f dagster/compose.dagster.yaml --env-file .env up -d
+ds-up:
+	docker compose -f compose/compose.ds.yaml --env-file .env up -d
+ds-down:
+	docker compose -f compose/compose.ds.yaml --env-file .env down
 
-dagster_down:
-	docker compose -f dagster/compose.dagster.yaml --env-file .env down
+pipeline_up:
+	docker compose -f compose/compose.etl.yaml \
+				-f compose/compose.dw.yaml \
+				--env-file .env up -d
 
-spark_up:
-	docker compose -f spark/compose.spark.yaml --env-file .env up -d
+pipeline_down:
+	docker compose -f compose/compose.etl.yaml \
+				-f compose/compose.dw.yaml \
+				--env-file .env down
 
-spark_down:
-	docker compose -f spark/compose.spark.yaml --env-file .env down
+up: pipeline_up
+	docker compose -f compose/compose.serving.yaml --env-file .env up -d
 
-up: dagster_up spark_up
-	docker compose up -d
-
-down: dagster_down spark_down
-	docker compose down
+down: pipeline_down
+	docker compose -f compose/compose.serving.yaml --env-file .env down -d
 
 setup_database:
 	./scripts/database/setup_mysql_and_create_schema.sh

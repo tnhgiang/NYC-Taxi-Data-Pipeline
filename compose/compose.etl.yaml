@@ -1,0 +1,197 @@
+services:
+  ########################################################################################
+  #                                  Dagster                                             #
+  ########################################################################################
+  pipeline:
+    build:
+      context: ../pipeline
+    image: pipeline:latest
+    container_name: pipeline
+    environment:
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_DATALAKE_BUCKET: ${MINIO_DATALAKE_BUCKET}
+      DAGSTER_PG_HOSTNAME: ${POSTGRES_HOST}
+      DAGSTER_PG_USERNAME: ${POSTGRES_USER}
+      DAGSTER_PG_PASSWORD: ${POSTGRES_PASSWORD}
+      DAGSTER_PG_DB: ${POSTGRES_DB}
+      DAGSTER_PG_PORT: ${POSTGRES_PORT}
+      SPARK_MASTER_URL: ${SPARK_MASTER_URL}
+      SPARK_APP_NAME: ${SPARK_APP_NAME}
+      CLICKHOUSE_HOST: ${CLICKHOUSE_HOST}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB}
+      CLICKHOUSE_TCP_PORT: ${CLICKHOUSE_TCP_PORT}
+      CLICKHOUSE_HTTP_PORT: ${CLICKHOUSE_HTTP_PORT}
+    volumes:
+      - ../pipeline:/opt/dagster/app/
+      - ../pipeline/spark-defaults.conf:/usr/local/spark/conf/spark-defaults.conf
+    ports:
+      - "${SPARK_WEBUI_PORT}:${SPARK_WEBUI_PORT}"
+    networks:
+      - network
+
+  dagster-postgres:
+    image: postgres:15
+    container_name: dagster-postgres
+    environment:
+      DAGSTER_PG_HOSTNAME: ${POSTGRES_HOST}
+      DAGSTER_PG_USERNAME: ${POSTGRES_USER}
+      DAGSTER_PG_PASSWORD: ${POSTGRES_PASSWORD}
+      DAGSTER_PG_DB: ${POSTGRES_DB}
+      DAGSTER_PG_PORT: ${POSTGRES_PORT}
+    volumes:
+      - ../storage/postgresql:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    networks:
+      - network
+
+  dagster:
+    build:
+      context: ../dagster
+    image: dagster:latest
+    container_name: dagster
+    networks:
+      - network
+
+  dagster-webserver:
+    image: dagster:latest
+    container_name: dagster-webserver
+    entrypoint:
+      - dagster-webserver
+      - -h
+      - "0.0.0.0"
+      - -p
+      - "${DAGSTER_WEBSERVER_PORT}"
+      - -w
+      - workspace.yaml
+    environment:
+      DAGSTER_PG_HOSTNAME: ${POSTGRES_HOST}
+      DAGSTER_PG_USERNAME: ${POSTGRES_USER}
+      DAGSTER_PG_PASSWORD: ${POSTGRES_PASSWORD}
+      DAGSTER_PG_DB: ${POSTGRES_DB}
+      DAGSTER_PG_PORT: ${POSTGRES_PORT}
+    ports:
+      - "${DAGSTER_WEBSERVER_PORT}:${DAGSTER_WEBSERVER_PORT}"
+    volumes: # Make docker client accessible so we can terminate containers from dagit
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../dagster_home:/opt/dagster/dagster_home
+    networks:
+      - network
+
+  dagster-daemon:
+    image: dagster:latest
+    container_name: dagster-daemon
+    environment:
+      DAGSTER_PG_HOSTNAME: ${POSTGRES_HOST}
+      DAGSTER_PG_USERNAME: ${POSTGRES_USER}
+      DAGSTER_PG_PASSWORD: ${POSTGRES_PASSWORD}
+      DAGSTER_PG_DB: ${POSTGRES_DB}
+      DAGSTER_PG_PORT: ${POSTGRES_PORT}
+    entrypoint:
+      - dagster-daemon
+      - run
+    volumes: # Make docker client accessible so we can launch containers using host docker
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../dagster_home:/opt/dagster/dagster_home
+    networks:
+      - network
+
+  ########################################################################################
+  #                                   Spark                                              #
+  ########################################################################################
+  spark-master:
+    build:
+      context: ../spark
+    container_name: "spark-master"
+    environment:
+      SPARK_MODE: master
+      SPARK_LOCAL_IP: ${SPARK_LOCAL_IP}
+      SPARK_RPC_AUTHENTICATION_ENABLED: ${SPARK_RPC_AUTHENTICATION_ENABLED}
+      SPARK_RPC_ENCRYPTION_ENABLED: ${SPARK_RPC_ENCRYPTION_ENABLED}
+      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: ${SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED}
+      SPARK_SSL_ENABLED: ${SPARK_SSL_ENABLED}
+    ports:
+      - "${SPARK_MASTER_PORT}:${SPARK_MASTER_PORT}"
+      - "${SPARK_MASTER_WEBUI_PORT}:${SPARK_MASTER_WEBUI_PORT}"
+    volumes:
+      - ../spark/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+    networks:
+      - network
+
+  spark-worker-1:
+    image: docker.io/bitnami/spark:3.5
+    container_name: "spark-worker-1"
+    environment:
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: ${SPARK_MASTER_URL}
+      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY}
+      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES}
+      SPARK_RPC_AUTHENTICATION_ENABLED: ${SPARK_RPC_AUTHENTICATION_ENABLED}
+      SPARK_RPC_ENCRYPTION_ENABLED: ${SPARK_RPC_ENCRYPTION_ENABLED}
+      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: ${SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED}
+      SPARK_SSL_ENABLED: ${SPARK_SSL_ENABLED}
+    networks:
+      - network
+
+  spark-worker-2:
+    image: docker.io/bitnami/spark:3.5
+    container_name: "spark-worker-2"
+    environment:
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: ${SPARK_MASTER_URL}
+      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY}
+      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES}
+      SPARK_RPC_AUTHENTICATION_ENABLED: ${SPARK_RPC_AUTHENTICATION_ENABLED}
+      SPARK_RPC_ENCRYPTION_ENABLED: ${SPARK_RPC_ENCRYPTION_ENABLED}
+      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: ${SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED}
+      SPARK_SSL_ENABLED: ${SPARK_SSL_ENABLED}
+    networks:
+      - network
+
+  ########################################################################################
+  #                                   MinIO                                              #
+  ########################################################################################
+  minio:
+    hostname: minio
+    image: "minio/minio"
+    container_name: lake-minio
+    command: ["server", "/data", "--console-address", ":${MINIO_CONSOLE_PORT}"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "${MINIO_CONSOLE_PORT}:${MINIO_CONSOLE_PORT}"
+    expose:
+      - "${MINIO_API_PORT}"
+    volumes:
+      - ../storage/minio:/data
+    networks:
+      - network
+
+  mc:
+    image: minio/mc
+    container_name: mc
+    hostname: mc
+    entrypoint: >
+      /bin/sh -c " until (/usr/bin/mc config host add minio
+      http://${MINIO_ENDPOINT} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}) do echo '...waiting...' && sleep 1;
+      done; /usr/bin/mc mb minio/${MINIO_DATALAKE_BUCKET}; /usr/bin/mc policy set public
+      minio/${MINIO_DATALAKE_BUCKET}; exit 0; "
+    depends_on:
+      - minio
+    networks:
+      - network
+
+networks:
+  network:
+    driver: bridge
+    name: network
