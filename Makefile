@@ -1,5 +1,10 @@
 .PHONY: pipeline_up pipeline_down up down setup_database load_csv test dbt_compile
 
+ds-up:
+	docker compose -f compose/compose.ds.yaml --env-file .env up -d
+ds-down:
+	docker compose -f compose/compose.ds.yaml --env-file .env down
+
 pipeline_up:
 	docker compose -f compose/compose.etl.yaml \
 				-f compose/compose.dw.yaml \

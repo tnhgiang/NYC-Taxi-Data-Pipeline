@@ -5,7 +5,7 @@ services:
     image: metabase-clickhouse:latest
     container_name: metabase
     ports:
-      - "${METABASE_PORT}:3000"
+      - "${MB_UI_PORT}:3000"
     volumes:
       - ../storage/metabase:/metabase.db
     networks:
