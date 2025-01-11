@@ -1,0 +1,17 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ds-mysql
+    volumes:
+      - ../storage/mysql:/var/lib/mysql
+    ports:
+      - "${MYSQL_PORT}:${MYSQL_PORT}"
+    env_file:
+      - .env
+    networks:
+      - network
+
+networks:
+  network:
+    driver: bridge
+    name: network
