@@ -1,31 +1,32 @@
+from datetime import datetime
 from itertools import chain
 
 import geopandas as gpd
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Output, asset
+from dateutil.relativedelta import relativedelta
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, create_map, lit, when
+from pyspark.sql.functions import col, concat_ws, create_map, lit, sha2, when
 
 from .. import constants as const
-from ..partitions import daily_partitions
+from ..partitions import monthly_partitions
 
 
 @asset(
     ins={
         "bronze_yellow_taxi_trips": AssetIn(
-            key_prefix=["bronze", "nyc_taxi"],
+            key_prefix=["bronze", "nyc_taxi"], input_manager_key="spark_io_manager"
         )
     },
     name="silver_cleaned_yellow_taxi_trips",
     key_prefix=["silver", "nyc_taxi"],
     group_name="silver",
     io_manager_key="spark_io_manager",
-    required_resource_keys={"pyspark"},
     compute_kind="Spark",
-    partitions_def=daily_partitions,
+    partitions_def=monthly_partitions,
 )
 def silver_cleaned_yellow_taxi_trips(
-    context: AssetExecutionContext, bronze_yellow_taxi_trips: pl.DataFrame
+    context: AssetExecutionContext, bronze_yellow_taxi_trips: DataFrame
 ) -> Output[DataFrame]:
     """
     The data cleaning and filtering processing based on the Data Dictionary provided at
@@ -33,15 +34,13 @@ def silver_cleaned_yellow_taxi_trips(
 
     Args:
         context (AssetExecutionContext): The execution context.
-        bronze_yellow_taxi_trips (pl.DataFrame): The input DataFrame.
+        bronze_yellow_taxi_trips (DataFrame): The input DataFrame.
 
     Returns:
         Output[DataFrame]: The cleaned and filtered DataFrame.
     """
-    spark = context.resources.pyspark.spark_session
-
     # Convert Polars DataFrame to Spark DataFrame
-    df = spark.createDataFrame(bronze_yellow_taxi_trips.to_dicts())
+    df = bronze_yellow_taxi_trips
     df.cache()
 
     context.log.info(f"Number of rows before data cleaning: {df.count()}")
@@ -85,10 +84,20 @@ def silver_cleaned_yellow_taxi_trips(
 
     # Data range constraints
     # Drop rows where data points break range constraints
+    date_from = datetime.strptime(context.partition_key, "%Y-%m-%d")
+    date_to = (date_from + relativedelta(months=1)).strftime("%Y-%m-%d")
     df = (
         df.filter(
             (df["VendorID"] >= const.VENDER_ID_MIN_VALUE)
             & (df["VendorID"] <= const.VENDER_ID_MAX_VALUE)
+        )
+        .filter(
+            (df["tpep_pickup_datetime"] >= date_from)
+            & (df["tpep_pickup_datetime"] < date_to)
+        )
+        .filter(
+            (df["tpep_dropoff_datetime"] >= date_from)
+            & (df["tpep_dropoff_datetime"] < date_to)
         )
         .filter(df["passenger_count"] >= 0)
         .filter(
@@ -164,8 +173,26 @@ def silver_cleaned_yellow_taxi_trips(
     ) / 60
     df = df.withColumn("trip_duration", trip_duration_in_minutes)
 
-    # Sort by trip_id
-    df = df.orderBy("trip_id")
+    # Add surrogate key
+    df = df.withColumn(
+        "trip_key",
+        sha2(
+            concat_ws(
+                "||",
+                df["vendor"],
+                df["pickup_datetime"],
+                df["pickup_location_id"],
+                df["dropoff_datetime"],
+                df["dropoff_location_id"],
+                df["passenger_count"],
+                df["total_amount"],
+            ),
+            numBits=256,
+        ),
+    )
+
+    # Sort by pickup_datetime
+    df = df.orderBy(df["pickup_datetime"].asc())
 
     context.log.info(f"Number of rows after data cleaning: {df.count()}")
     df.unpersist()

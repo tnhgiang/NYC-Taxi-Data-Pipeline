@@ -2,7 +2,7 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Output, asset
 from pyspark.sql import DataFrame
 
-from ..partitions import daily_partitions
+from ..partitions import monthly_partitions
 
 
 @asset(
@@ -40,7 +40,7 @@ def dim_locations(
     group_name="gold",
     io_manager_key="spark_io_manager",
     compute_kind="Spark",
-    partitions_def=daily_partitions,
+    partitions_def=monthly_partitions,
 )
 def fact_trips(
     context: AssetExecutionContext, silver_cleaned_yellow_taxi_trips: DataFrame

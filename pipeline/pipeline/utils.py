@@ -5,10 +5,16 @@ import polars as pl
 import pytz
 
 
-def get_current_time(only_time=False) -> str:
-    """Get current time in Vietnam timezone."""
-    vietname_tz = pytz.timezone("Asia/Ho_Chi_Minh")
+def get_current_datetime(tz="Asia/Ho_Chi_Minh") -> datetime:
+    vietname_tz = pytz.timezone(tz)
     dt = datetime.now(vietname_tz)
+
+    return dt
+
+
+def get_current_datetime_str(only_time=False) -> str:
+    """Get current time in Vietnam timezone."""
+    dt = get_current_datetime()
 
     if only_time:
         return dt.strftime("%H_%M_%S_%f")

@@ -3,7 +3,7 @@ from pathlib import Path
 import requests
 from dagster import ConfigurableResource, InitResourceContext
 
-from ..utils import get_current_time
+from ..utils import get_current_datetime_str
 
 
 class FileDownloaderReousrce(ConfigurableResource):
@@ -40,7 +40,7 @@ class CSVDownloaderResource(FileDownloaderReousrce):
         """Get the temporary path for the CSV file."""
         return str(
             Path("/tmp")
-            / f"csv-{get_current_time()}-{'-'.join(context.asset_key.path)}.csv"
+            / f"csv-{get_current_datetime_str()}-{'-'.join(context.asset_key.path)}.csv"
         )
 
 
@@ -51,5 +51,18 @@ class ZipFileDownloaderResource(FileDownloaderReousrce):
         """Get the temporary path for the ZIP file."""
         return str(
             Path("/tmp")
-            / f"shapefile-{get_current_time()}-{'-'.join(context.asset_key.path)}.zip"
+            / f"shapefile-{get_current_datetime_str()}-"
+            f"{'-'.join(context.asset_key.path)}.zip"
+        )
+
+
+class ParquetFileDownloaderResource(FileDownloaderReousrce):
+    file_type: str = "Parquet"
+
+    def _get_path(self, context: InitResourceContext) -> str:
+        """Get the temporary path for the Parquet file."""
+        return str(
+            Path("/tmp")
+            / f"parquet-{get_current_datetime_str()}-"
+            f"{'-'.join(context.asset_key.path)}.parquet"
         )
