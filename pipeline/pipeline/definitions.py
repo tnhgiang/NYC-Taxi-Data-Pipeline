@@ -12,6 +12,7 @@ from .dbt import dbt_project
 from .resources.clickhouse_io_manager import ClickHouseIOManager
 from .resources.file_downloader_resource import (
     CSVDownloaderResource,
+    ParquetFileDownloaderResource,
     ZipFileDownloaderResource,
 )
 from .resources.minio_io_manager import (
@@ -19,7 +20,6 @@ from .resources.minio_io_manager import (
     MinIOPartitionedParquetIOManager,
     MinIOZippedShapefileIOManager,
 )
-from .resources.mysql_io_manager import MySQLIOManager
 from .resources.spark_io_manager import SparkPartitionedParquetIOManager
 
 ####################
@@ -88,7 +88,7 @@ RESOURCES_LOCAL = {
     "pyspark": pyspark_resource,
     "csv_downloader": CSVDownloaderResource(),
     "zipfile_downloader": ZipFileDownloaderResource(),
-    "mysql_io_manager": MySQLIOManager(MYSQL_CONFIG),
+    "parquet_downloader": ParquetFileDownloaderResource(),
     "csv_io_manager": MinIOCSVIOManager(MINIO_CONFIG),
     "shapefile_io_manager": MinIOZippedShapefileIOManager(MINIO_CONFIG),
     "parquet_io_manager": MinIOPartitionedParquetIOManager(MINIO_CONFIG),

@@ -6,7 +6,7 @@ echo "Creating table: fact_trips"
 clickhouse client -n <<EOSQL
 CREATE TABLE IF NOT EXISTS ${CLICKHOUSE_DB}.fact_trips
 (
-    trip_id UInt32,
+    trip_key FixedString(64),
     vendor String,
     pickup_datetime DateTime,
     dropoff_datetime DateTime,
@@ -26,5 +26,5 @@ CREATE TABLE IF NOT EXISTS ${CLICKHOUSE_DB}.fact_trips
     airport_fee Float32
 )
 ENGINE = MergeTree()
-PRIMARY KEY trip_id;
+PRIMARY KEY trip_key;
 EOSQL

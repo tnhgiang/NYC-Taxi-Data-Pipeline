@@ -5,7 +5,7 @@ import polars as pl
 from dagster import InputContext, IOManager, OutputContext
 from pyspark.sql import DataFrame
 
-from ..utils import get_current_time
+from ..utils import get_current_datetime_str
 
 
 @contextmanager
@@ -49,7 +49,7 @@ class ClickHouseIOManager(IOManager):
         self, context: OutputContext, obj: Union[pl.DataFrame, DataFrame]
     ):
         schema, table = context.asset_key.path[1:]
-        tmp_table = f"{schema}.tmp_{table}_{get_current_time(only_time=True)}"
+        tmp_table = f"{schema}.tmp_{table}_{get_current_datetime_str(only_time=True)}"
         target_table = f"{schema}.{table}"
 
         # Get table schema information

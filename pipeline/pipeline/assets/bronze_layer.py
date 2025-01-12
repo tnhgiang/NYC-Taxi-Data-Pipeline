@@ -1,44 +1,41 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
-import polars as pl
 from dagster import AssetExecutionContext, Output, asset
 
-from ..partitions import daily_partitions
+from ..partitions import monthly_partitions
 
 
 @asset(
     name="bronze_yellow_taxi_trips",
     key_prefix=["bronze", "nyc_taxi"],
     group_name="bronze",
-    required_resource_keys={"mysql_io_manager"},
+    required_resource_keys={"parquet_downloader"},
     io_manager_key="parquet_io_manager",
-    compute_kind="MySQL",
-    partitions_def=daily_partitions,
+    compute_kind="Python",
+    partitions_def=monthly_partitions,
 )
-def bronze_yellow_taxi_trips(context: AssetExecutionContext) -> Output[pl.DataFrame]:
-    sql_stm = "SELECT * FROM yellow_taxi_trips"
+def bronze_yellow_taxi_trips(context: AssetExecutionContext) -> Output[str]:
+    partition_month_str = context.partition_key
 
-    partition_date_str = context.partition_key
+    if not partition_month_str:
+        context.log.error("No partition key provided")
+        raise ValueError("No partition key provided")
 
-    partition_date = datetime.strptime(partition_date_str, "%Y-%m-%d")
-    next_date_str = (partition_date + timedelta(days=1)).strftime("%Y-%m-%d")
-    if partition_date_str:
-        sql_stm += (
-            f" WHERE tpep_pickup_datetime >= '{partition_date_str}'"
-            f" and tpep_pickup_datetime < '{next_date_str}'"
-        )
-        context.log.info(f"Loading data for partition date: {partition_date_str}")
-    else:
-        context.log.info("No partition date provided. Full loading data.")
+    partition_month_str = datetime.strptime(
+        partition_month_str, "%Y-%m-%d"
+    ).strftime("%Y-%m")
+    url = (
+        f"https://d37ci6vzurychx.cloudfront.net/trip-data/"
+        f"yellow_tripdata_{partition_month_str}.parquet"
+    )
 
-    pl_data = context.resources.mysql_io_manager.extract_data(sql_stm)
+    tmp_file_path = context.resources.parquet_downloader.download(context, url)
+    context.log.info(f"Ingested data from {url}")
 
     return Output(
-        pl_data,
+        tmp_file_path,
         metadata={
-            "table": "yellow_taxi_trips",
-            "row_count": len(pl_data),
-            "column_names": pl_data.columns,
+            "url": url,
         },
     )
 

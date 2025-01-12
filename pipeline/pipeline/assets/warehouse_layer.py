@@ -6,7 +6,7 @@ from dagster_dbt import DagsterDbtTranslator, DbtCliResource, dbt_assets
 from pyspark.sql import DataFrame
 
 from ..dbt import dbt_project
-from ..partitions import daily_partitions
+from ..partitions import monthly_partitions
 
 
 @asset(
@@ -21,7 +21,7 @@ from ..partitions import daily_partitions
     io_manager_key="warehouse_io_manager",
     metadata={
         "columns": [
-            "trip_id",
+            "trip_key",
             "vendor",
             "pickup_datetime",
             "dropoff_datetime",
@@ -42,10 +42,10 @@ from ..partitions import daily_partitions
             "congestion_surcharge",
             "airport_fee",
         ],
-        "primary_keys": ["trip_id"],
+        "primary_keys": ["trip_key"],
     },
     compute_kind="ClickHouse",
-    partitions_def=daily_partitions,
+    partitions_def=monthly_partitions,
 )
 def fact_trips(context: AssetExecutionContext, fact_trips: DataFrame):
     """

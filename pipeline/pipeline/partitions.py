@@ -1,5 +1,5 @@
 from datetime import datetime
 
-from dagster import DailyPartitionsDefinition
+from dagster import MonthlyPartitionsDefinition
 
-daily_partitions = DailyPartitionsDefinition(start_date=datetime(2024, 1, 1))
+monthly_partitions = MonthlyPartitionsDefinition(start_date=datetime(2009, 1, 1))

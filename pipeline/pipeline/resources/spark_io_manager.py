@@ -16,12 +16,14 @@ class SparkPartitionedParquetIOManager(ConfigurableIOManager):
         # Example: key = silver/nyc_taxi/yellow_taxi_trips
         key = "/".join(["s3a://lake", layer, schema, table.replace(f"{layer}_", "")])
 
+        ext = ".parquet" if layer == "bronze" else ""
+
         if context.has_partition_key:
             partition_key = context.asset_partition_key
             # Example: silver/nyc_taxi/yellow_taxi_trips/20240101.pq
-            return os.path.join(key, f"{partition_key}")
+            return os.path.join(key, f"{partition_key}{ext}")
         else:
-            return f"{key}"
+            return f"{key}{ext}"
 
     def handle_output(self, context: OutputContext, obj: DataFrame):
         try:

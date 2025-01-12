@@ -7,7 +7,7 @@ import polars as pl
 from dagster import InputContext, IOManager, OutputContext
 from minio import Minio
 
-from ..utils import get_current_time, get_size_in_MB
+from ..utils import get_current_datetime_str, get_size_in_MB
 
 
 @contextmanager
@@ -117,16 +117,16 @@ class MinIOPartitionedParquetIOManager(MinIOIOManager):
         key = "/".join([layer, schema, table.replace(f"{layer}_", "")])
 
         tmp_file_path = "/tmp/file-{}-{}.parquet".format(
-            get_current_time(), "-".join(context.asset_key.path)
+            get_current_datetime_str(), "-".join(context.asset_key.path)
         )
 
         if context.has_asset_partitions:
             partition_key = context.asset_partition_key
             # Example: bronze/nyc_taxi/yellow_taxi_trips/20240101.pq
-            return os.path.join(key, f"{partition_key}.pq"), tmp_file_path
+            return os.path.join(key, f"{partition_key}.parquet"), tmp_file_path
         else:
             # Example: bronze/nyc_taxi/yellow_taxi_trips.pq
-            return f"{key}.pq", tmp_file_path
+            return f"{key}.parquet", tmp_file_path
 
     def _load_file(self, path):
         """Load parquet file to a DataFrame."""
@@ -141,7 +141,7 @@ class MinIOCSVIOManager(MinIOIOManager):
         # Example: key = bronze/nyc_taxi/yellow_taxi_trips
         key = "/".join([layer, schema, table.replace(f"{layer}_", "")])
         tmp_file_path = "/tmp/file-{}-{}.csv".format(
-            get_current_time(), "-".join(context.asset_key.path)
+            get_current_datetime_str(), "-".join(context.asset_key.path)
         )
 
         # Example: bronze/nyc_taxi/yellow_taxi_trips.pq
@@ -160,7 +160,7 @@ class MinIOZippedShapefileIOManager(MinIOIOManager):
         # Example: key = bronze/nyc_taxi/yellow_taxi_trips
         key = "/".join([layer, schema, table.replace(f"{layer}_", "")])
         tmp_file_path = "/tmp/file-{}-{}.zip".format(
-            get_current_time(), "-".join(context.asset_key.path)
+            get_current_datetime_str(), "-".join(context.asset_key.path)
         )
 
         # Example: bronze/nyc_taxi/yellow_taxi_trips
