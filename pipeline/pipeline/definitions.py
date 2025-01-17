@@ -7,6 +7,7 @@ from dagster_dbt import DbtCliResource
 from dagster_pyspark import PySparkResource
 
 from pipeline import assets
+from pipeline.asset_checks import pipeline_asset_checks
 
 from .dbt import dbt_project
 from .resources.clickhouse_io_manager import ClickHouseIOManager
@@ -15,6 +16,7 @@ from .resources.file_downloader_resource import (
     ParquetFileDownloaderResource,
     ZipFileDownloaderResource,
 )
+from .resources.great_expectations_resource import GreatExpectationsResource
 from .resources.minio_io_manager import (
     MinIOCSVIOManager,
     MinIOPartitionedParquetIOManager,
@@ -27,17 +29,14 @@ from .resources.spark_io_manager import SparkPartitionedParquetIOManager
 ####################
 pipeline_assets = load_assets_from_package_module(assets)
 
-# dbt
-# DBT_PROJECT_DIR = file_relative_path(__file__, "../dbt_nyc")
-# DBT_PROFILES_DIR = file_relative_path(__file__, "../dbt_nyc")
-# dbt_asset = load_assets_from_dbt_project(
-#     profiles_dir=DBT_PROFILES_DIR,
-#     project_dir=DBT_PROJECT_DIR,
-#     key_prefix=["warehouse", "nyc_taxi"],
-# )
-
 # Combine all assets
 all_assets = [*pipeline_assets]
+
+
+####################
+#   Asset Check    #
+####################
+all_asset_checks = [*pipeline_asset_checks]
 
 
 ####################
@@ -89,6 +88,7 @@ RESOURCES_LOCAL = {
     "csv_downloader": CSVDownloaderResource(),
     "zipfile_downloader": ZipFileDownloaderResource(),
     "parquet_downloader": ParquetFileDownloaderResource(),
+    "gx": GreatExpectationsResource(),
     "csv_io_manager": MinIOCSVIOManager(MINIO_CONFIG),
     "shapefile_io_manager": MinIOZippedShapefileIOManager(MINIO_CONFIG),
     "parquet_io_manager": MinIOPartitionedParquetIOManager(MINIO_CONFIG),
@@ -114,5 +114,6 @@ deployment_env = os.getenv("ENV", "LOCAL")
 ####################
 defs = Definitions(
     assets=all_assets,
+    asset_checks=all_asset_checks,
     resources=resources_by_deployment_env[deployment_env],
 )

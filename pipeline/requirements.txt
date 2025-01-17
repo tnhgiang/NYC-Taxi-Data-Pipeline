@@ -17,3 +17,4 @@ clickhouse-driver==0.2.9
 dagster-dbt==0.25.3
 dbt-clickhouse==1.8.7
 python-dateutil==2.9.0
+great-expectations==0.18.22
